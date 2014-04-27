@@ -1,5 +1,6 @@
 data/*
 lda-c-dist/*
+var/*
 .DS_Store
 *~
 [#].[#]
@@ -7,3 +8,4 @@ lda-c-dist/*
 *[#]
 *.pyc
 *.pdf
+*.zip

@@ -61,7 +61,14 @@ def main():
         output_fn = sys.argv[4]
         generate_corpus(fn,dict_fn,output_fn)
     
-    
+def demo_corpus():
+    fn = sys.argv[1]
+    corpus = get_corpus(fn)
+    for c in corpus:
+        print c
+
+
 
 if __name__ == '__main__':
     main()
+    #test()
