@@ -1,0 +1,9 @@
+data/*
+lda-c-dist/*
+.DS_Store
+*~
+[#].[#]
+.[#]*
+*[#]
+*.pyc
+*.pdf
