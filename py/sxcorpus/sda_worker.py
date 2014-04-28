@@ -15,11 +15,10 @@ def main():
   etaSum = [1, 1, 1, 1, 1]
   
   alpha = [0.2, 0.2, 0.2, 0.2, 0.2]
+  
   print lda_worker(miniBatch, eta, etaSum, alpha)
   
 def lda_worker(miniBatch, eta, etaSum, alpha):
-  # Seed
-  np.random.seed(100000001)
   # Global Variables
   VAR_MAX_ITER = 1000
   VAR_CONVERGED = 0.001
@@ -43,6 +42,10 @@ def lda_worker(miniBatch, eta, etaSum, alpha):
     term = {}
     for doc in miniBatch:  
       phi = localVB(doc, alpha, newLambda, k, etaSum)
+    
+    # test 
+    # for wordID in phi:  
+    #   print sum(phi[wordID]) 
       
       # Calculate the summation terms
       for (wordID, count) in doc:
@@ -75,18 +78,12 @@ def lda_worker(miniBatch, eta, etaSum, alpha):
   return valReturn
   
 def localVB(doc, alpha, lamb, k, etaSum):
-  print doc
-  print alpha
-  print lamb
-  print etaSum
-  
   # Global Variables
   VAR_MAX_ITER = 1000
   VAR_CONVERGED = 0.001
   
   # Initialization
   gamma = np.asarray([1.0 / k for i in xrange(k)])
-  print gamma
   phi = {}
   
   for round in xrange(VAR_MAX_ITER):
@@ -107,9 +104,7 @@ def localVB(doc, alpha, lamb, k, etaSum):
     meanchange = np.mean(abs(gamma - lastgamma))
     if (meanchange < VAR_CONVERGED):
       break
-  
-  print phi
-  print '----------'
+      
   return phi
     
 def phiTimeWordCount(doc, phi, k):
