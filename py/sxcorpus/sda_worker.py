@@ -11,12 +11,13 @@ def main():
   eta[1] = [0.2, 0.2, 0.2, 0.2, 0.2]
   eta[2] = [0.2, 0.2, 0.2, 0.2, 0.2]
   eta[3] = [0.2, 0.2, 0.2, 0.2, 0.2]
+  etasum = [1,1,1,1,1]
   
   alpha = [0.1, 0.1, 0.2, 0.3, 0.3]
   
-  lda_worker(miniBatch, eta, alpha)
+  lda_worker(miniBatch, eta, etaSum, alpha)
   
-def lda_worker(miniBatch, eta, alpha):
+def lda_worker(miniBatch, eta, etaSum, alpha):
   # Seed
   np.random.seed(100000001)
   # Global Variables
@@ -25,7 +26,7 @@ def lda_worker(miniBatch, eta, alpha):
  
   # Initialization
   k = len(alpha)
-  v = 500000
+  # v = 500000 
   alpha = np.asarray(alpha)
   etaArray = {}
   newLambda = {}
@@ -36,26 +37,37 @@ def lda_worker(miniBatch, eta, alpha):
     newLambda[wordID] = np.asarray(eta[wordID])
   
   # Iterations
+  globalDict = set()
   for round in xrange(VAR_MAX_ITER): 
     # Process each document
+    term = {}
     for doc in miniBatch:
-      phi = localVB(doc, alpha, newLambda, k, v) 
+      phi = localVB(doc, alpha, newLambda, k, etaSum) 
       
-      for (wordID, count) in doc:
-        newLambda[wordID] = etaArray[wordID] + count * phi[wordID]
+      if not wordID in term :
+        term[wordID] = count * phi[wordID]
+      else:
+        term[wordID] = term[wordID] + count * phi[wordID]
+      
+      for wordID,count in doc:
+        globalDict.add(wordID)
+        
+    for wordID in globalDict:
+      newLambda[wordID] = etaArray[wordID] + term[wordID]
     
     # Converged?
-    if :
-      break
+    # if :
+    #  break
     
         
   # Delta lambda
+  valReturn = {}
   for wordID in newLambda:
-    newLambda[wordID] = newLambda[wordID] - etaArray[wordID]
+    valReturn[wordID] = (newLambda[wordID] - etaArray[wordID]).tolist()
   
-  return newLambda
+  return valReturn
   
-def localVB(doc, alpha, lamb, k, v):
+def localVB(doc, alpha, lamb, k, etaSum):
   # Global Variables
   VAR_MAX_ITER = 100
   VAR_CONVERGED = 0.001
@@ -68,7 +80,7 @@ def localVB(doc, alpha, lamb, k, v):
   for round in xrange(VAR_MAX_ITER):
     # E_q[log theta] & E_q[log beta]
     ElogTheta = psi(gamma)
-    ElogBeta = elogBeta(lamb, k)
+    ElogBeta = elogBeta(lamb, k, etaSum)
     
     # Update phi
     for wordID in lamb:  
@@ -94,19 +106,15 @@ def phiTimeWordCount(doc, phi, k):
   
   return sum
           
-def elogBeta(lamb, k):
+def elogBeta(lamb, k, etaSum):
     """
     E_q [log(beta) | lambda]
     """
     ElogBeta = {}
   
-    # Evaluate the second term of ElogBeta 
-    lambdaSumW = np.asarray([0 for i in xrange(k)])
+    # Evaluate the second term of ElogBeta  
     for wordID in lamb:
-      lambdaSumW = lambdaSumW + lamb[wordID]
-    
-    for wordID in lamb:
-      ElogBeta[wordID] = psi(lamb[wordID]) - psi(lambdaSumW)
+      ElogBeta[wordID] = psi(lamb[wordID]) - psi(etaSum)
     
     return ElogBeta  
   
