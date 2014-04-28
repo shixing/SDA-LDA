@@ -3,7 +3,7 @@ import sxsda.eta_alpha as _mea
 from multiprocessing import Process,Queue
 import sxsda.sda_worker as _mworker
 
-def syn_framework(corpus,k,nthread,minibatch,var_path,record_eta = False):
+def syn_framework(corpus,k,V,nthread,minibatch,var_path,record_eta = False):
     # configs
     thread_batch = minibatch/nthread
     # ids 
@@ -25,7 +25,8 @@ def syn_framework(corpus,k,nthread,minibatch,var_path,record_eta = False):
 
         if doc_id % thread_batch == thread_batch - 1:
             eta_temp = _mea.get_eta(k,input_eta = eta, voc_set = voc_temp)
-            batch_buffer.append((doc_buffer,eta_temp))
+            etaSum = _mea.get_eta_sum(eta,k,V)
+            batch_buffer.append((doc_buffer,eta_temp,etaSum))
             
             # clear doc buffer
             doc_buffer = []
@@ -70,8 +71,8 @@ def syn_master(batch_buffer,k,n_core,eta,alpha):
     q = Queue()
 
     for i in xrange(n_core):
-        d,eta = batchbuffer[i]
-        prc = Process(target = syn_worker, args = (d,eta,alpha,q))
+        d,eta,etaSum = batchbuffer[i]
+        prc = Process(target = syn_worker, args = (d,eta,etaSum,alpha,q))
         processes.append(prc)
         prc.start()
         
@@ -84,6 +85,6 @@ def syn_master(batch_buffer,k,n_core,eta,alpha):
         
     return new_eta
 
-def syn_worker(d,eta,alpha,q):
-    delta_eta =  _mworker.lda_worker(d,eta,alpha)
+def syn_worker(d,eta,etaSum,alpha,q):
+    delta_eta =  _mworker.lda_worker(d,eta,etaSum,alpha)
     q.put(delta_eta)

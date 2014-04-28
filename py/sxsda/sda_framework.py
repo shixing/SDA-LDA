@@ -46,11 +46,11 @@ def main():
     minibatch = config['minibatch']
     
     corpus = _mCorpus.get_corpus(mm_path)
-
+    V = corpus.num_terms
     if asyn:
-        _masynf.asyn_master(corpus,k,nthread,minibatch,var_path)
+        _masynf.asyn_master(corpus,k,V,nthread,minibatch,var_path)
     else:
-        _msynf.syn_master(corpus,k,nthread,minibatch,var_path)
+        _msynf.syn_master(corpus,k,V,nthread,minibatch,var_path)
 
 
 if __init__ == '__main__':

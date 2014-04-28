@@ -35,3 +35,11 @@ def add_eta(first,second):
     
     return first
                 
+def get_eta_sum(eta,k,V,default = 0.01):
+    partSum = default * (V-len(eta))
+    etaSum = [partSum]*k
+    for wid in eta:
+        for i in xrange(k):
+            etaSum[i] += eta[wid][i]
+    return etaSum
+    
