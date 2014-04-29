@@ -1,6 +1,7 @@
 from gensim import corpora
 import sys
 import logging
+import random
 
 def generate_dict(fn,stop_fn,output_fn):
     dictionary = corpora.Dictionary(line.lower().split() for line in open(fn))
@@ -47,6 +48,26 @@ def main_generate_corpus():
     output_fn = sys.argv[3]
     generate_corpus(fn,dict_fn,output_fn)
     
+
+def generate_split(fn,fn_train,fn_test,ratio):
+    f = open(fn)
+    f_train= open(fn_train,'w')
+    f_test= open(fn_test,'w')
+    for line in f:
+        ll = line.strip().split()
+        train = []
+        test = []
+        for lll in ll:
+            if random.randint(1,100) <= ratio:
+                test.append(lll)
+            else:
+                train.append(lll)
+        f_train.write(' '.join(train)+'\n')
+        f_test.write(' '.join(test)+'\n')
+
+    f_train.close()
+    f_test.close()
+
 def main():
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     t = sys.argv[1]
@@ -60,7 +81,17 @@ def main():
         dict_fn = sys.argv[3]
         output_fn = sys.argv[4]
         generate_corpus(fn,dict_fn,output_fn)
-    
+    elif t == 'split':
+        fn = sys.argv[2]
+        ratio_str = sys.argv[3]
+        ratio = int(ratio_str)
+        fn_train = '.'.join([fn,ratio_str,'train'])
+        fn_test = '.'.join([fn,ratio_str,'test'])
+        generate_split(fn,fn_train,fn_test,ratio)
+        
+
+
+
 def demo_corpus():
     fn = sys.argv[1]
     corpus = get_corpus(fn)
