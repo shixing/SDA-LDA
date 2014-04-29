@@ -52,7 +52,27 @@ def localVB(doc, alpha, lamb, k, etaSum):
       break
       
   return gamma
+  
+def phiTimeWordCount(doc, phi, k):
+  sum = np.asarray([0 for i in xrange(k)])
+  
+  for (wordID, count) in doc:
+    sum = sum + phi[wordID] * count
+  
+  return sum
+          
+def elogBeta(lamb, etaSum):
+    """
+    E_q [log(beta) | lambda]
+    """
+    k = len(etaSum)
+    ElogBeta = {}
+    # Evaluate the second term of ElogBeta  
+    for wordID in lamb:
+      ElogBeta[wordID] = psi(lamb[wordID]) - psi(etaSum)
     
+    return ElogBeta    
+  
 def logPW(wordID, gamma, lamb):
   k = len(gamma)
   lambOfWord = lamb[wordID]

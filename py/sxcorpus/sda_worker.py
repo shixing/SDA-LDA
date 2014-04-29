@@ -20,7 +20,7 @@ def main():
   
 def lda_worker(miniBatch, eta, etaSum, alpha):
   # Global Variables
-  VAR_MAX_ITER = 1000
+  VAR_MAX_ITER = 1
   VAR_CONVERGED = 0.001
  
   # Initialization
@@ -78,8 +78,14 @@ def lda_worker(miniBatch, eta, etaSum, alpha):
   return valReturn
   
 def localVB(doc, alpha, lamb, k, etaSum):
+  print doc
+  print alpha
+  print lamb
+  print etaSum
+  print '----------'
+  
   # Global Variables
-  VAR_MAX_ITER = 1000
+  VAR_MAX_ITER = 1
   VAR_CONVERGED = 0.001
   
   # Initialization
@@ -109,7 +115,7 @@ def localVB(doc, alpha, lamb, k, etaSum):
     
 def phiTimeWordCount(doc, phi, k):
   sum = np.asarray([0 for i in xrange(k)])
-   
+  
   for (wordID, count) in doc:
     sum = sum + phi[wordID] * count
   
