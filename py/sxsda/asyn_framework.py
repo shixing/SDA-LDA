@@ -88,3 +88,4 @@ def asyn_framework(corpus,k,V,nthread,minibatch,var_path,record_eta = False):
         path = os.path.join(var_path,fn)
         lockedEta.write_eta(path)
         
+    return lockedEta.get_value()

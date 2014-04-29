@@ -63,6 +63,7 @@ def syn_framework(corpus,k,V,nthread,minibatch,var_path,record_eta = False):
         round_id +=1
         batch_id +=1
 
+    return eta
 
 def syn_master(batch_buffer,k,n_core,eta,alpha):
     new_eta = eta
