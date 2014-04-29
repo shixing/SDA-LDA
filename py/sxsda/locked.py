@@ -4,7 +4,7 @@ from functools import partial
 import sxsda.eta_alpha as _mea
 
 
-class ThreadSum:
+class LockedSum:
     def __init__(self, value, lock):
         self.value = value
         self.lock = lock

@@ -17,7 +17,7 @@ def perplexity(test_trainW, test_testW, alpha, lamb, etaSum):
   for i in xrange(numDoc):
     doc = test_testW[i]
     
-    for (wordID, count) in doc
+    for (wordID, count) in doc:
       nume = nume + logPW(wordID, gamma[i], lamb)
       deno = deno + count
       

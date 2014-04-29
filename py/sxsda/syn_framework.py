@@ -1,4 +1,6 @@
 import logging
+import os
+import sys
 import sxsda.eta_alpha as _mea
 from multiprocessing import Process,Queue
 import sxsda.sda_worker as _mworker
@@ -32,9 +34,9 @@ def syn_framework(corpus,k,V,nthread,minibatch,var_path,record_eta = False):
             doc_buffer = []
             voc_temp = set()
             
-            if batch_id % nthread = nthread - 1:
+            if batch_id % nthread == nthread - 1:
                 # update eta
-                eta = syn_master(batch_buffer,k,nthread,eta,_mea.get_alpha())
+                eta = syn_master(batch_buffer,k,nthread,eta,_mea.get_alpha(k))
                 if record_eta:
                     fn = 'eta.{}.pickle'.format(round_id)
                     path = os.path.join(var_path,fn)
@@ -42,19 +44,24 @@ def syn_framework(corpus,k,V,nthread,minibatch,var_path,record_eta = False):
                 # clear batch_buffer
                 batch_buffer = []
                 round_id += 1
+                logging.info('round:{}, batch:{}'.format(round_id,batch_id))
 
             batch_id += 1
+            
+
 
         doc_id += 1
+
 
     # process the docs in current doc_buffer
     if len(doc_buffer) > 0:
         # form a new batch
         eta_temp = _mea.get_eta(k,input_eta = eta, voc_set = voc_temp)
-        batch_buffer.append((doc_buffer,eta_temp))
+        etaSum = _mea.get_eta_sum(eta,k,V)
+        batch_buffer.append((doc_buffer,eta_temp,etaSum))
         
         # form a new round
-        eta = syn_master(batch_buffer,k,len(batch_buffer),eta,_mea.get_alpha())
+        eta = syn_master(batch_buffer,k,len(batch_buffer),eta,_mea.get_alpha(k))
         if record_eta:
             fn = 'eta.{}.pickle'.format(round_id)
             path = os.path.join(var_path,fn)
@@ -72,7 +79,7 @@ def syn_master(batch_buffer,k,n_core,eta,alpha):
     q = Queue()
 
     for i in xrange(n_core):
-        d,eta,etaSum = batchbuffer[i]
+        d,eta,etaSum = batch_buffer[i]
         prc = Process(target = syn_worker, args = (d,eta,etaSum,alpha,q))
         processes.append(prc)
         prc.start()

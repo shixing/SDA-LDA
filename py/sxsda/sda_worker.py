@@ -2,6 +2,10 @@ import numpy as np
 from scipy.special import psi
 from scipy.special import gamma as gammaFu
 from scipy.special import polygamma
+from scipy.misc import logsumexp
+from sxsda.sxmath import mylogsumexp
+
+np.seterr(invalid='raise')
 
 def main():
   doc1 = [(1,1), (2,1)]
@@ -38,6 +42,7 @@ def lda_worker(miniBatch, eta, etaSum, alpha):
   globalDict = set()
   oldLambda = {};
   for round in xrange(VAR_MAX_ITER): 
+    print round
     # Process each document
     term = {}
     for doc in miniBatch:  
@@ -93,8 +98,16 @@ def localVB(doc, alpha, lamb, k, etaSum):
     
     # Update phi
     for wordID in lamb:  
-      phi[wordID] = np.exp(ElogTheta + ElogBeta[wordID])
-      phi[wordID] = phi[wordID] / sum(phi[wordID])
+      phi[wordID] = ElogTheta + ElogBeta[wordID] # phi in log space
+      try:
+        phiLogSum = logsumexp(phi[wordID])
+        phi[wordID] = np.exp(phi[wordID] - phiLogSum) # phi in normal space
+      except Exception as e:
+        print phi[wordID]
+        print ElogTheta
+        print ElogBeta[wordID]
+        raise e
+        
     
     # Update gamma
     lastgamma = gamma
@@ -123,8 +136,14 @@ def elogBeta(lamb, etaSum):
     ElogBeta = {}
     # Evaluate the second term of ElogBeta  
     for wordID in lamb:
-      ElogBeta[wordID] = psi(lamb[wordID]) - psi(etaSum)
-    
+      # edit by xingshi: lamb is probabliy going to be 0.0
+      # and your final lamb will always convergy to some zero
+      ElogBeta[wordID] = psi(lamb[wordID]+[0.0001]*k) - psi(etaSum)
+      # for value in ElogBeta[wordID]:
+      #   if value == float('inf'):
+      #     print lamb[wordID]
+      #     print etaSum
+      #     break
     return ElogBeta  
   
 if __name__ == '__main__':

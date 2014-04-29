@@ -2,7 +2,8 @@ import logging
 from multiprocessing import Lock, Pool
 import sxsda.eta_alpha as _mea
 from sxsda.locked import LockedSum, LockedEta
-
+import sys
+import os
 
 def callback(delta_eta,lockedEta,nActPro,nBatch,var_path,nthread):
     lockedEta.add_eta(delta_eta)
@@ -47,7 +48,7 @@ def asyn_framework(corpus,k,V,nthread,minibatch,var_path,record_eta = False):
         if doc_id % thread_batch == thread_batch - 1:
             eta_temp = lockedEta.get_eta(k,voc_temp)
             etaSum = lockedEta.get_eta_sum(k,V)
-            alpha = _mea.get_alpha()
+            alpha = _mea.get_alpha(k)
             while True: # check for active processes amount
                 if nActPro.get_value() < nthread:
                     break

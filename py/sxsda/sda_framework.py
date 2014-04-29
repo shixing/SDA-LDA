@@ -1,14 +1,14 @@
-import sxsda.sda_worker as _mWorker
 import sxcorpus.sxcorpus as _mCorpus
 from sxcorpus.sxcorpus import MyCorpus
+import sxsda.sda_worker as _mWorker
 import sxsda.eta_alpha as _mea
 import sxsda.syn_framework as _msynf
 import sxsda.asyn_framework as _masynf
 import sxsda.perplexity as _mper
-import sxsda.syn_f
 import cPickle
 import logging
-
+import sys
+import os
 
 #### utils ####
 
@@ -17,7 +17,7 @@ def get_config(fn):
     f = open(fn)
     for line in f:
         fields = line.strip().split('=')
-        assert(len(fields)==2)
+        assert(len(fields)==3)
         t = fields[0]
         key = fields[1]
         value = fields[2]
@@ -28,7 +28,10 @@ def get_config(fn):
         elif t=='s': # string
             config[key] = value
         elif t=='b': # bool
-            config[key]= bool(value)
+            if value == 'True':
+                config[key]= True
+            elif value == 'False':
+                config[key]=False
     return config
 
 
@@ -38,7 +41,7 @@ def train():
     '''
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     # loading configs;
-    config = get_config(sys.argv[1])
+    config = get_config(sys.argv[2])
     k = config['k']
     nthread = config['nthread']
     asyn = config['asyn']
@@ -48,9 +51,9 @@ def train():
     corpus = _mCorpus.get_corpus(mm_path)
     V = corpus.num_terms
     if asyn:
-        eta = _masynf.asyn_master(corpus,k,V,nthread,minibatch,var_path)
+        eta = _masynf.asyn_framework(corpus,k,V,nthread,minibatch,var_path)
     else:
-        eta = _msynf.syn_master(corpus,k,V,nthread,minibatch,var_path)
+        eta = _msynf.syn_framework(corpus,k,V,nthread,minibatch,var_path,True)
 
     fn = 'eta.final.pickle'
     path = os.path.join(var_path,fn)
@@ -62,7 +65,7 @@ def test():
     '''
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     # loading configs;
-    config = get_config(sys.argv[1])
+    config = get_config(sys.argv[2])
     k = config['k']
     test_path = config['test_path']
     test_train_path = config['test_train']
@@ -87,5 +90,13 @@ def test():
     
     print perplexity
 
-if __init__ == '__main__':
+def main():
+    t = sys.argv[1]
+    if t == 'train':
+        train()
+    elif t == 'test':
+        test()
+
+
+if __name__ == '__main__':
     main()
