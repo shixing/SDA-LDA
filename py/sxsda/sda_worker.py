@@ -32,6 +32,7 @@ def lda_worker(miniBatch, eta, etaSum, alpha):
   alpha = np.asarray(alpha)
   etaArray = {}
   newLambda = {}
+  etaSum = np.asarray(etaSum)
   
   # Convert eta to etaArray
   for wordID in eta:
@@ -64,6 +65,12 @@ def lda_worker(miniBatch, eta, etaSum, alpha):
     newLambda = {}
     for wordID in globalDict:
       newLambda[wordID] = etaArray[wordID] + term[wordID]
+    
+    # Update etaSum
+    deltaEtaSum = np.asarray([0 for i in xrange(k)])
+    for wordID in newLambda:
+      deltaEtaSum = deltaEtaSum + (newLambda[wordID] - oldLambda[wordID])
+    etaSum = etaSum + deltaEta
     
     # Converged?
     absDiff = np.asarray([0 for i in xrange(k)])
