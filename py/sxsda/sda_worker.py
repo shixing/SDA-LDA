@@ -78,13 +78,6 @@ def lda_worker(miniBatch, eta, etaSum, alpha):
   return valReturn
   
 def localVB(doc, alpha, lamb, k, etaSum):
-  
-  print doc
-  print alpha
-  print lamb
-  print etaSum
-  print '----------'
-  
   # Global Variables
   VAR_MAX_ITER = 100
   VAR_CONVERGED = 0.001
