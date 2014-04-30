@@ -1,4 +1,12 @@
-/data
-wccc 
+WIKI
 4004480 205775645 1632206661 /Users/xingshi/Downloads/short_abstracts_en.nt
+
+TRAIN 4000
+TEST 400
+THREAD 4 8 16 
+K 10 50 100
+MINI 40 400
+
+TIME
+PERPLEXITY
 

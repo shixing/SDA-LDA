@@ -1,6 +1,7 @@
 data/*
 lda-c-dist/*
 var/*
+log/*
 .DS_Store
 *~
 [#].[#]
@@ -9,3 +10,4 @@ var/*
 *.pyc
 *.pdf
 *.zip
+*.xlsx

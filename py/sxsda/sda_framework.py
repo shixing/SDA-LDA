@@ -9,7 +9,7 @@ import cPickle
 import logging
 import sys
 import os
-
+from datetime import datetime
 #### utils ####
 
 def get_config(fn):
@@ -39,6 +39,7 @@ def train():
     '''
     $1 path to config file
     '''
+    start = datetime.now()
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     # loading configs;
     config = get_config(sys.argv[2])
@@ -58,6 +59,9 @@ def train():
     fn = 'eta.final.pickle'
     path = os.path.join(var_path,fn)
     _mea.write_eta(eta,path)
+    end = datetime.now()
+    print end-start
+
 
 def test():
     '''
