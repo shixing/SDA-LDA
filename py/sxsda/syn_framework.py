@@ -5,6 +5,9 @@ import sxsda.eta_alpha as _mea
 from multiprocessing import Process,Queue
 import sxsda.sda_worker as _mworker
 
+
+
+
 def syn_framework(corpus,k,V,nthread,minibatch,var_path,record_eta = False):
     # configs
     thread_batch = minibatch/nthread
@@ -26,7 +29,7 @@ def syn_framework(corpus,k,V,nthread,minibatch,var_path,record_eta = False):
         doc_buffer.append(doc)
 
         if doc_id % thread_batch == thread_batch - 1:
-            eta_temp = _mea.get_eta(k,input_eta = eta, voc_set = voc_temp)
+            eta_temp = _mea.get_eta(k,eta, voc_temp)
             etaSum = _mea.get_eta_sum(eta,k,V)
             batch_buffer.append((doc_buffer,eta_temp,etaSum))
             
@@ -56,7 +59,7 @@ def syn_framework(corpus,k,V,nthread,minibatch,var_path,record_eta = False):
     # process the docs in current doc_buffer
     if len(doc_buffer) > 0:
         # form a new batch
-        eta_temp = _mea.get_eta(k,input_eta = eta, voc_set = voc_temp)
+        eta_temp = _mea.get_eta(k,eta, voc_temp)
         etaSum = _mea.get_eta_sum(eta,k,V)
         batch_buffer.append((doc_buffer,eta_temp,etaSum))
         

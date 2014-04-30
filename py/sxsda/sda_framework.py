@@ -17,7 +17,7 @@ def get_config(fn):
     f = open(fn)
     for line in f:
         fields = line.strip().split('=')
-        assert(len(fields)==3)
+        assert(len(fields)==3)            
         t = fields[0]
         key = fields[1]
         value = fields[2]
@@ -71,20 +71,20 @@ def test():
     test_train_path = config['test_train']
     test_test_path = config['test_test']
     eta_path = config['eta_path']
-    
+    print eta_path
     corpus = _mCorpus.get_corpus(test_path)
     V = corpus.num_terms
 
     voc_set = set()
     for doc in corpus:
         for wid,count in doc:
-            woc_set.add(wid)
+            voc_set.add(wid)
 
     eta = _mea.load_eta(eta_path)
     etaTest = _mea.get_eta(k,eta,voc_set)
     etaSum = _mea.get_eta_sum(eta,k,V)
-    test_test = _mea.load_eta(test_test_path)
-    test_train = _mea.load_eta(test_train_path)
+    test_test = _mCorpus.get_corpus(test_test_path)
+    test_train = _mCorpus.get_corpus(test_train_path)
     alpha = _mea.get_alpha(k)
     perplexity = _mper.perplexity(test_train,test_test,alpha,etaTest,etaSum)
     

@@ -4,7 +4,7 @@ from scipy.special import gamma as gammaFu
 from scipy.special import polygamma
 from scipy.misc import logsumexp
 from sxsda.sxmath import mylogsumexp
-
+import random
 np.seterr(invalid='raise')
 
 def main():
@@ -22,10 +22,10 @@ def main():
   
   print lda_worker(miniBatch, eta, etaSum, alpha)
   
-def lda_worker(miniBatch, eta, etaSum, alpha):
+def lda_worker(miniBatch, eta, etaSum, alpha, debug = True):
   # Global Variables
-  VAR_MAX_ITER = 100
-  VAR_CONVERGED = 0.001
+  VAR_MAX_ITER = 10
+  VAR_CONVERGED = 0.01
  
   # Initialization
   k = len(alpha)
@@ -42,16 +42,16 @@ def lda_worker(miniBatch, eta, etaSum, alpha):
   # Iterations
   globalDict = set()
   oldLambda = {};
+  nConvergedDoc = 0
   for round in xrange(VAR_MAX_ITER): 
-    print round
+    if debug:
+      print round
+    nConvergedDoc = 0
     # Process each document
     term = {}
     for doc in miniBatch:  
-      phi = localVB(doc, alpha, newLambda, k, etaSum)
-    
-    # test 
-    # for wordID in phi:  
-    #   print sum(phi[wordID]) 
+      phi, _, ncd = localVB(doc, alpha, newLambda, k, etaSum)
+      nConvergedDoc += ncd
       
       # Calculate the summation terms
       for (wordID, count) in doc:
@@ -60,7 +60,10 @@ def lda_worker(miniBatch, eta, etaSum, alpha):
           term[wordID] = count * phi[wordID]
         else:
           term[wordID] = term[wordID] + count * phi[wordID]
-  
+    if debug:
+      print '# converge doc:{}/{}'.format(nConvergedDoc,len(miniBatch))
+      
+
     oldLambda = newLambda
     newLambda = {}
     for wordID in globalDict:
@@ -70,15 +73,15 @@ def lda_worker(miniBatch, eta, etaSum, alpha):
     deltaEtaSum = np.asarray([0 for i in xrange(k)])
     for wordID in newLambda:
       deltaEtaSum = deltaEtaSum + (newLambda[wordID] - oldLambda[wordID])
-    etaSum = etaSum + deltaEta
+    etaSum = etaSum + deltaEtaSum
     
     # Converged?
     absDiff = np.asarray([0 for i in xrange(k)])
-    
+
     for wordID in oldLambda:
       absDiff = absDiff + abs(oldLambda[wordID] - newLambda[wordID])
-    
-    meanchange = np.mean(absDiff)
+
+    meanchange = np.mean(absDiff)/len(oldLambda)
     if (meanchange < VAR_CONVERGED):
       break
         
@@ -91,11 +94,11 @@ def lda_worker(miniBatch, eta, etaSum, alpha):
   
 def localVB(doc, alpha, lamb, k, etaSum):
   # Global Variables
-  VAR_MAX_ITER = 100
-  VAR_CONVERGED = 0.001
-  
+  VAR_MAX_ITER = 10
+  VAR_CONVERGED = 0.01
+  isConverged = 0
   # Initialization
-  gamma = np.asarray([1.0 / k for i in xrange(k)])
+  gamma = np.asarray([1.0 / k  for i in xrange(k)])
   phi = {}
   
   for round in xrange(VAR_MAX_ITER):
@@ -105,15 +108,9 @@ def localVB(doc, alpha, lamb, k, etaSum):
     
     # Update phi
     for wordID in lamb:  
-      phi[wordID] = ElogTheta + ElogBeta[wordID] # phi in log space
-      try:
-        phiLogSum = logsumexp(phi[wordID])
-        phi[wordID] = np.exp(phi[wordID] - phiLogSum) # phi in normal space
-      except Exception as e:
-        print phi[wordID]
-        print ElogTheta
-        print ElogBeta[wordID]
-        raise e
+      phi[wordID] = ElogTheta + ElogBeta[wordID] # phi in log spaceXS
+      phiLogSum = logsumexp(phi[wordID])
+      phi[wordID] = np.exp(phi[wordID] - phiLogSum) # phi in normal space
         
     
     # Update gamma
@@ -123,9 +120,9 @@ def localVB(doc, alpha, lamb, k, etaSum):
     # isConverged ?
     meanchange = np.mean(abs(gamma - lastgamma))
     if (meanchange < VAR_CONVERGED):
-      break
+      isConverged = 1
       
-  return phi
+  return phi,gamma,isConverged
     
 def phiTimeWordCount(doc, phi, k):
   sum = np.asarray([0 for i in xrange(k)])
@@ -141,16 +138,10 @@ def elogBeta(lamb, etaSum):
     """
     k = len(etaSum)
     ElogBeta = {}
-    # Evaluate the second term of ElogBeta  
+    # Evaluate the second term of ElogBeta
+    psiEtaSum = psi(etaSum)
     for wordID in lamb:
-      # edit by xingshi: lamb is probabliy going to be 0.0
-      # and your final lamb will always convergy to some zero
-      ElogBeta[wordID] = psi(lamb[wordID]+[0.0001]*k) - psi(etaSum)
-      # for value in ElogBeta[wordID]:
-      #   if value == float('inf'):
-      #     print lamb[wordID]
-      #     print etaSum
-      #     break
+      ElogBeta[wordID] = psi(lamb[wordID]) - psiEtaSum
     return ElogBeta  
   
 if __name__ == '__main__':

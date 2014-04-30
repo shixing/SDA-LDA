@@ -2,6 +2,7 @@ import logging
 from multiprocessing import Lock, Pool
 import sxsda.eta_alpha as _mea
 from sxsda.locked import LockedSum, LockedEta
+import sxsda.sda_worker as _mworker
 import sys
 import os
 
@@ -14,6 +15,7 @@ def callback(delta_eta,lockedEta,nActPro,nBatch,var_path,nthread):
         fn = 'eta.{}.pickle'.format(nBatch_value/nthread-1)
         path = os.path.join(var_path,fn)
         lockedEta.write_eta(path)
+        logging.info('round:{}, batch:{}'.format(nBatch_value/nthread-1,nBatch_value))
 
 
 def asyn_workder(d,eta,etaSum,alpha):
@@ -63,13 +65,14 @@ def asyn_framework(corpus,k,V,nthread,minibatch,var_path,record_eta = False):
             voc_temp = set()
             batch_id += 1
 
+            
         doc_id += 1
 
     # some remain doc may not be processed
     if len(doc_buffer) > 0:
         eta_temp = lockedEta.get_eta(k,voc_temp)
         etaSum = lockedEta.get_eta_sum(k,V)
-        alpha = _mea.get_alpha()
+        alpha = _mea.get_alpha(k)
         while True: # check for active processes amount
             if nActPro.get_value() < nthread:
                 break
@@ -89,4 +92,4 @@ def asyn_framework(corpus,k,V,nthread,minibatch,var_path,record_eta = False):
         path = os.path.join(var_path,fn)
         lockedEta.write_eta(path)
         
-    return lockedEta.get_value()
+    return lockedEta.eta

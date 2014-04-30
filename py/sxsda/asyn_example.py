@@ -29,6 +29,7 @@ def mycallback(adder,threadsum,ntsum):
 
 def worker(x):
     time.sleep(1)
+    print ':',x
     return x
 
 def main():
