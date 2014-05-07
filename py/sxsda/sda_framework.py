@@ -10,6 +10,7 @@ import logging
 import sys
 import os
 from datetime import datetime
+
 #### utils ####
 
 def get_config(fn):
@@ -51,10 +52,13 @@ def train():
     minibatch = config['minibatch']
     corpus = _mCorpus.get_corpus(mm_path)
     V = corpus.num_terms
+
+
     if asyn:
         eta = _masynf.asyn_framework(corpus,k,V,nthread,minibatch,var_path)
     else:
         eta = _msynf.syn_framework(corpus,k,V,nthread,minibatch,var_path,True)
+    
 
     fn = 'eta.final.pickle'
     path = os.path.join(var_path,fn)
