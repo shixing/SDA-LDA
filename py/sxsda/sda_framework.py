@@ -79,6 +79,7 @@ def test():
     test_train_path = config['test_train']
     test_test_path = config['test_test']
     eta_path = config['eta_path']
+    gensim= config['gensim']
     print eta_path
     corpus = _mCorpus.get_corpus(test_path)
     V = corpus.num_terms
@@ -87,10 +88,15 @@ def test():
     for doc in corpus:
         for wid,count in doc:
             voc_set.add(wid)
+    etaTest, etaSum = None,None
+    
+    if gensim:
+        etaTest, etaSum = _mea.get_gensim_eta_etaSum(eta_path,voc_set)
+    else:
+        eta = _mea.load_eta(eta_path)
+        etaTest = _mea.get_eta(k,eta,voc_set)
+        etaSum = _mea.get_eta_sum(eta,k,V)
 
-    eta = _mea.load_eta(eta_path)
-    etaTest = _mea.get_eta(k,eta,voc_set)
-    etaSum = _mea.get_eta_sum(eta,k,V)
     test_test = _mCorpus.get_corpus(test_test_path)
     test_train = _mCorpus.get_corpus(test_train_path)
     alpha = _mea.get_alpha(k)

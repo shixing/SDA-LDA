@@ -1,13 +1,32 @@
-WIKI
-4004480 205775645 1632206661 /Users/xingshi/Downloads/short_abstracts_en.nt
+Note: cd in folder `py` to run the following command.
+### Train
 
-TRAIN 4000
-TEST 400
-K 10 50 100
-MINI 40 400
-THREAD 4 8 16 
-ASYN 0 1
+#### LDA using gensim
+##### online training
+```
+python -m sx_gensim_lda.sxlda online ../config/train.1.config
+```
 
-TIME
-PERPLEXITY
+##### batch training
+```
+python -m sx_gensim_lda.sxlda batch ../config/train.1.config
+```
 
+#### Multi-core SDA-LDA
+#####Synchronous Training
+First, in config file (train.1.config), set asyn=False, then run:
+```
+python -m sxsda.sda_framework train ../config/train.1.config
+```
+#####Asynchronous Training
+Set asyn=True in config file, then run the same command above
+
+#### Multi-machine (MPI based)
+```
+mpiexec -np 3 python -m sxsda.sda_framework_mpi train ../config/train.1.config
+```
+
+#### Test
+```
+python -m sxsda.sda_framework test ../config/test.1.config
+```
