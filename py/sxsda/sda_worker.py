@@ -13,7 +13,7 @@ def main():
   
   miniBatch = [doc1, doc2]
   
-  eta = {}
+  eta = {} 
   eta[1] = [0.2, 0.2, 0.2, 0.2, 0.2]
   eta[2] = [0.2, 0.2, 0.2, 0.2, 0.2]
   etaSum = [1, 1, 1, 1, 1]
@@ -21,7 +21,8 @@ def main():
   alpha = [0.2, 0.2, 0.2, 0.2, 0.2]
   
   print lda_worker(miniBatch, eta, etaSum, alpha)
-  
+
+
 def lda_worker(miniBatch, eta, etaSum, alpha, debug = True):
   # Global Variables
   VAR_MAX_ITER = 10
@@ -30,99 +31,90 @@ def lda_worker(miniBatch, eta, etaSum, alpha, debug = True):
   # Initialization
   k = len(alpha)
   alpha = np.asarray(alpha)
-  etaArray = {}
-  newLambda = {}
+  eta_2d, widMap = eta_dict_to_array(eta,k) # widMap wid->colum_id in eta_2d; eta_2d is k*len(widMap)
+  oldLambda_2d = None
+  newLambda_2d = np.array(eta_2d)
   etaSum = np.asarray(etaSum)
-  
-  # Convert eta to etaArray
-  for wordID in eta:
-    etaArray[wordID] = np.asarray(eta[wordID])
-    newLambda[wordID] = np.asarray(eta[wordID])
-  
-  # Iterations
-  globalDict = set()
-  oldLambda = {};
   nConvergedDoc = 0
+
   for round in xrange(VAR_MAX_ITER): 
     if debug:
       print round
     nConvergedDoc = 0
+    
+    oldLambda_2d = np.array(newLambda_2d)
+    expElogBeta = expElogBetaF(newLambda_2d, etaSum,widMap) # dict 
+    newLambda_2d = np.array(eta_2d)
+
     # Process each document
-    term = {}
     for doc in miniBatch:  
-      phi, _, ncd = localVB(doc, alpha, newLambda, k, etaSum)
+      # phi_cts is k*len(doc) array, = phi_dvk*n_dv
+      phi_cts,ids, _, ncd = localVB(doc, alpha, k, expElogBeta)
       nConvergedDoc += ncd
       
-      # Calculate the summation terms
-      for (wordID, count) in doc:
-        globalDict.add(wordID)
-        if not wordID in term :
-          term[wordID] = count * phi[wordID]
-        else:
-          term[wordID] = term[wordID] + count * phi[wordID]
+      # update newLambda
+      for i,wid in enumerate(ids):
+        column_id = widMap[wid]
+        newLambda_2d[:,column_id] += phi_cts[:,i]
+
     if debug:
       print '# converge doc:{}/{}'.format(nConvergedDoc,len(miniBatch))
-      
 
-    oldLambda = newLambda
-    newLambda = {}
-    for wordID in globalDict:
-      newLambda[wordID] = etaArray[wordID] + term[wordID]
-    
+      
     # Update etaSum
-    deltaEtaSum = np.asarray([0 for i in xrange(k)])
-    for wordID in newLambda:
-      deltaEtaSum = deltaEtaSum + (newLambda[wordID] - oldLambda[wordID])
-    etaSum = etaSum + deltaEtaSum
+    etaSum += newLambda_2d.sum(axis = 1) - oldLambda_2d.sum(axis = 1)
     
     # Converged?
-    absDiff = np.asarray([0 for i in xrange(k)])
-
-    for wordID in oldLambda:
-      absDiff = absDiff + abs(oldLambda[wordID] - newLambda[wordID])
-
-    meanchange = np.mean(absDiff)/len(oldLambda)
+    meanchange = np.mean(np.abs(oldLambda_2d-newLambda_2d))
     if (meanchange < VAR_CONVERGED):
       break
         
   # Delta lambda
   valReturn = {}
-  for wordID in newLambda:
-    valReturn[wordID] = (newLambda[wordID] - etaArray[wordID]).tolist()
+  delta_Lambda_2d = newLambda_2d - eta_2d
+  for wid in widMap:
+    column_id = widMap[wid]
+    valReturn[wid] = list(delta_Lambda_2d[:,column_id])
   
+
   return valReturn
-  
-def localVB(doc, alpha, lamb, k, etaSum):
+
+
+# based on Lee&Seung trick, don't calculate phi, calculate update gamma directly
+def localVB(doc, alpha, k, expElogBeta):
   # Global Variables
   VAR_MAX_ITER = 10
   VAR_CONVERGED = 0.01
   isConverged = 0
   # Initialization
-  gamma = np.asarray([1.0 / k  for i in xrange(k)])
-  phi = {}
+  ids = [id for id,_ in doc]
+  cts = np.array([cnt for _,cnt in doc])
+  
+  gamma = np.asarray([1.0 / k  for i in xrange(k)]) # 1*k
+  expElogTheta = np.exp(psi(gamma)) # 1*k
+  
+  expElogBetaD = expElogBeta_k_by_d(expElogBeta,k,ids)  # k*d
+  phinorm = np.dot(expElogTheta,expElogBetaD) + 1e-100 # 1 * d
   
   for round in xrange(VAR_MAX_ITER):
-    # E_q[log theta] & E_q[log beta]
-    ElogTheta = psi(gamma)
-    ElogBeta = elogBeta(lamb, etaSum)
-    
-    # Update phi
-    for wordID in lamb:  
-      phi[wordID] = ElogTheta + ElogBeta[wordID] # phi in log spaceXS
-      phiLogSum = logsumexp(phi[wordID])
-      phi[wordID] = np.exp(phi[wordID] - phiLogSum) # phi in normal space
-        
-    
-    # Update gamma
+
     lastgamma = gamma
-    gamma = alpha + phiTimeWordCount(doc, phi, k)
+    gamma = alpha + expElogTheta * np.dot(cts/phinorm, expElogBetaD.T)
     
+    expElogTheta = np.exp(psi(gamma))
+    phinorm = np.dot(expElogTheta,expElogBetaD) + 1e-100 # 1 * d
     # isConverged ?
     meanchange = np.mean(abs(gamma - lastgamma))
     if (meanchange < VAR_CONVERGED):
       isConverged = 1
-      
-  return phi,gamma,isConverged
+      break
+
+  # calculate phi
+  
+  phi_cts = np.dot( np.dot( np.diag(expElogTheta), expElogBetaD), np.diag(cts/phinorm))
+
+  return phi_cts,ids,gamma,isConverged
+
     
 def phiTimeWordCount(doc, phi, k):
   sum = np.asarray([0 for i in xrange(k)])
@@ -131,18 +123,50 @@ def phiTimeWordCount(doc, phi, k):
     sum = sum + phi[wordID] * count
   
   return sum
-          
-def elogBeta(lamb, etaSum):
+
+
+def expElogBetaF(lamb, etaSum, widMap=None):
     """
     E_q [log(beta) | lambda]
     """
-    k = len(etaSum)
-    ElogBeta = {}
+    if type(lamb) == dict: # lamb is dict
+      expElogBeta = {}
     # Evaluate the second term of ElogBeta
-    psiEtaSum = psi(etaSum)
-    for wordID in lamb:
-      ElogBeta[wordID] = psi(lamb[wordID]) - psiEtaSum
-    return ElogBeta  
+      psiEtaSum = psi(etaSum)
+      for wordID in lamb:
+        expElogBeta[wordID] = np.exp(psi(lamb[wordID]) - psiEtaSum)
+      return expElogBeta  
+    else: # lamb is k*d array
+      expElogBeta = {}
+    # Evaluate the second term of ElogBeta
+      psiEtaSum = psi(etaSum)
+      for wid in widMap:
+        column_id = widMap[wid]
+        expElogBeta[wid] = np.exp(psi(lamb[:,column_id]) - psiEtaSum)
+      return expElogBeta  
+   
+
+def expElogBeta_k_by_d(expElogBeta,k,ids):
+  expElogBetaD = np.zeros((k,len(ids)))
+  for i in xrange(len(ids)):
+    wid = ids[i]
+    expElogBetaD[:,i] = expElogBeta[wid]
+
+  return expElogBetaD
+
+
+def eta_dict_to_array(eta,k):
+  eta_array = np.zeros((k,len(eta)))
+  widMap = {}
+  i = 0
+  for wid in eta:
+    widMap[wid] = i
+    eta_array[:,i] = eta[wid]
+    i+=1
+  return eta_array,widMap
+
+
+  
   
 if __name__ == '__main__':
   main()
