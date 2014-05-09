@@ -8,10 +8,12 @@ mini=$2
 thread=$3
 thread1=$(( $thread + 1 ))
 asyn=$4
+
 fn=$CONFIG/train.$k.$mini.$thread.$asyn.config;
 _TRAIN=train.$k.$mini.$thread.$asyn.config;
 vf=$VAR/$k.$mini.$thread.$asyn;
 mkdir $vf
+
 echo $fn
 echo "i=k=$k" > $fn
 echo "i=nthread=$thread" >> $fn
@@ -19,6 +21,7 @@ echo "s=mm_path=$DATA/4000.mm" >> $fn
 echo "b=asyn=$asyn" >> $fn
 echo "s=var_path=$vf/" >> $fn
 echo "i=minibatch=$mini" >> $fn
+
 
 fn=$CONFIG/test.$k.$mini.$thread.$asyn.config;
 _TEST=test.$k.$mini.$thread.$asyn.config;
@@ -44,9 +47,7 @@ echo "bash doit.test.sh $_TEST > $_PER" >> $fn
 }
 
 # compare topic
-for k in 10 50 100; do
-    generate $k 432 12 False
-done;
+
 
 # compare MINI
 for mini in 72 432; do 

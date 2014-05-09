@@ -1,0 +1,9 @@
+#!/bin/bash
+#PBS -l nodes=1:ppn=1
+#PBS -l walltime=12:00:00
+
+cd /home/nlg-05/xingshi/workspace/misc/573Final/py
+
+python -m sx_gensim_lda.sxlda online /home/nlg-05/xingshi/workspace/misc/573Final/config/gensim_online_10.config > /home/nlg-05/xingshi/workspace/misc/573Final/log/gensim_online_10.log.txt
+
+python -m sxsda.sda_framework test /home/nlg-05/xingshi/workspace/misc/573Final/config/gensim_online_10.config.test > /home/nlg-05/xingshi/workspace/misc/573Final/log/gensim_online_10.per.txt

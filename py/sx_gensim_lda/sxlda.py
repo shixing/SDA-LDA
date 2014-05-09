@@ -14,12 +14,12 @@ def corpus_dictionary(corpus_fn,dict_fn):
     return mm,dictionary
 
 def online_lda(corpus,dictionary,num_topics,batch_size):
-    lda = gensim.models.ldamodel.LdaModel(corpus=corpus, id2word=dictionary, num_topics=num_topics, update_every=1, chunksize=batch_size, passes=1)
+    lda = gensim.models.ldamodel.LdaModel(corpus=corpus, id2word=dictionary, num_topics=num_topics, update_every=1,eval_every=None, chunksize=batch_size, passes=1)
     return lda
 
 
 def batch_lda(corpus,dictionary,num_topics):
-    lda = gensim.models.ldamodel.LdaModel(corpus=corpus, id2word=dictionary, num_topics=num_topics, update_every=0, passes=20)
+    lda = gensim.models.ldamodel.LdaModel(corpus=corpus, id2word=dictionary, num_topics=num_topics, update_every=0, passes=10, eval_every = None)
     return lda
 
 def train():

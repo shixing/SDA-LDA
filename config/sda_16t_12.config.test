@@ -1,0 +1,6 @@
+i=k=100
+s=test_path=/home/nlg-05/xingshi/workspace/misc/573Final/data/10000.mm
+s=test_train=/home/nlg-05/xingshi/workspace/misc/573Final/data/10000.10.train.mm
+s=test_test=/home/nlg-05/xingshi/workspace/misc/573Final/data/10000.10.test.mm
+s=eta_path=/Users/xingshi/Workspace/misc/573Final/var/sda_16t_12/eta.final.pickle
+b=gensim=False

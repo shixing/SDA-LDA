@@ -62,6 +62,8 @@ def master_process(comm,status,tags,corpus,k,V,nthread,minibatch,var_path,record
     thread_batch = minibatch/nthread
     lockedEta = LockedEta({},Lock())
     bg = batch_generator(corpus,k,V,thread_batch,lockedEta)
+    last_doc_seen = 0
+
 
     while closed_workers < num_workers:
         data = comm.recv(source = MPI.ANY_SOURCE, tag = MPI.ANY_TAG, status = status)
@@ -70,8 +72,11 @@ def master_process(comm,status,tags,corpus,k,V,nthread,minibatch,var_path,record
         
         if tag == tags.READY:
             try:
-                doc_buffer,eta_temp,etaSum,alpha,batch_id = next(bg)
-                comm.send((doc_buffer,eta_temp,etaSum,alpha,batch_id),dest = source,tag = tags.START)
+                if source <= nthread:
+                    doc_buffer,eta_temp,etaSum,alpha,batch_id = next(bg)
+                    comm.send((doc_buffer,eta_temp,etaSum,alpha,batch_id),dest = source,tag = tags.START)
+                else:
+                    comm.send(None, dest = source, tag = tags.EXIT)
             except StopIteration:
                 comm.send(None, dest = source, tag = tags.EXIT)
         elif tag == tags.DONE:
@@ -79,11 +84,13 @@ def master_process(comm,status,tags,corpus,k,V,nthread,minibatch,var_path,record
             nBatch_value += 1
             logging.info('Got batch {} results from worker {}'.format(nBatch_value,source))
             lockedEta.add_eta(delta_eta)
-            if nBatch_value % nthread == 0:
+            doc_seen = nBatch_value * minibatch * 1.0
+            if doc_seen - last_doc_seen >= 200000:
                 fn = 'eta.{}.pickle'.format(nBatch_value/nthread-1)
                 path = os.path.join(var_path,fn)
                 lockedEta.write_eta(path)
                 logging.info('round:{}, batch:{}'.format(nBatch_value/nthread-1,nBatch_value))
+                last_doc_seen = doc_seen
 
         elif tag == tags.EXIT:
             logging.info('Worker {} exited.'.format(source))
