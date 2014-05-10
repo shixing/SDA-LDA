@@ -4,6 +4,6 @@
 
 cd /home/nlg-05/xingshi/workspace/misc/573Final/py
 
-python -m sx_gensim_lda.sxlda online /home/nlg-05/xingshi/workspace/misc/573Final/config/gensim_online_14.config > /home/nlg-05/xingshi/workspace/misc/573Final/log/gensim_online_14.log.txt
+python -m sx_gensim_lda.sxlda online /home/nlg-05/xingshi/workspace/misc/573Final/config/gensim_online_14.config &> /home/nlg-05/xingshi/workspace/misc/573Final/log/gensim_online_14.log.txt
 
-python -m sxsda.sda_framework test /home/nlg-05/xingshi/workspace/misc/573Final/config/gensim_online_14.config.test > /home/nlg-05/xingshi/workspace/misc/573Final/log/gensim_online_14.per.txt
+python -m sxsda.sda_framework test /home/nlg-05/xingshi/workspace/misc/573Final/config/gensim_online_14.config.test &> /home/nlg-05/xingshi/workspace/misc/573Final/log/gensim_online_14.per.txt

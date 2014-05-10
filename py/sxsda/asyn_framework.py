@@ -6,16 +6,18 @@ import sxsda.sda_worker as _mworker
 import sys
 import os
 
-def callback(delta_eta,lockedEta,nActPro,nBatch,var_path,nthread):
+def callback(delta_eta,lockedEta,nActPro,nBatch,var_path,nthread,thread_batch,old_doc_seen):
     lockedEta.add_eta(delta_eta)
     nActPro.add_value(-1)
     nBatch.add_value(1)
     nBatch_value = nBatch.get_value()
-    if  nBatch_value % nthread == 0:
+    doc_seen = nBatch_value * thread_batch
+    if  doc_seen - old_doc_seen[0] >= 100000:
         fn = 'eta.{}.pickle'.format(nBatch_value/nthread-1)
         path = os.path.join(var_path,fn)
         lockedEta.write_eta(path)
         logging.info('round:{}, batch:{}'.format(nBatch_value/nthread-1,nBatch_value))
+        old_doc_seen[0] = doc_seen
 
 
 def asyn_workder(d,eta,etaSum,alpha):
@@ -33,6 +35,8 @@ def asyn_framework(corpus,k,V,nthread,minibatch,var_path,record_eta = False):
     # temp data
     doc_buffer = []
     voc_temp = set()
+    old_doc_seen = {}
+    old_doc_seen[0] = 0
     # global data
     lockedEta = LockedEta({},Lock())
     
@@ -55,7 +59,7 @@ def asyn_framework(corpus,k,V,nthread,minibatch,var_path,record_eta = False):
                 if nActPro.get_value() < nthread:
                     break
                 
-            cb = lambda x: callback(x,lockedEta,nActPro,nBatch,var_path,nthread)
+            cb = lambda x: callback(x,lockedEta,nActPro,nBatch,var_path,nthread,thread_batch,old_doc_seen)
             result = pool.apply_async(asyn_workder,(doc_buffer,eta_temp,etaSum,alpha),callback = cb)
             results.append(result)
             nActPro.add_value(1)
@@ -77,7 +81,7 @@ def asyn_framework(corpus,k,V,nthread,minibatch,var_path,record_eta = False):
             if nActPro.get_value() < nthread:
                 break
                 
-        cb = lambda x: callback(x,lockedEta,nActPro,nBatch,var_path,nthread)
+        cb = lambda x: callback(x,lockedEta,nActPro,nBatch,var_path,nthread,thread_batch,old_doc_seen)
         result = pool.apply_async(asyn_workder,(doc_buffer,eta_temp,etaSum,alpha),callback = cb)
         results.append(result)
         nActPro.add_value(1)

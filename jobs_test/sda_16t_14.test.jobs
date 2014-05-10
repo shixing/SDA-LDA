@@ -1,9 +1,11 @@
 #!/bin/bash
-#PBS -l nodes=2:ppn=9
-#PBS -l walltime=12:00:00
+
+#PBS -l nodes=1:ppn=1
+#PBS -l walltime=00:30:00
+
 
 cd /home/nlg-05/xingshi/workspace/misc/573Final/py
 
-mpiexec python -m sxsda.sda_framework_mpi train /home/nlg-05/xingshi/workspace/misc/573Final/config/sda_16t_14.config &> /home/nlg-05/xingshi/workspace/misc/573Final/log/sda_16t_14.log.txt
+#mpiexec python -m sxsda.sda_framework_mpi train /home/nlg-05/xingshi/workspace/misc/573Final/config/sda_16t_14.config &> /home/nlg-05/xingshi/workspace/misc/573Final/log/sda_16t_14.log.txt
 
 python -m sxsda.sda_framework test /home/nlg-05/xingshi/workspace/misc/573Final/config/sda_16t_14.config.test &> /home/nlg-05/xingshi/workspace/misc/573Final/log/sda_16t_14.per.txt

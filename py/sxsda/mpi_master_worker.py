@@ -84,8 +84,8 @@ def master_process(comm,status,tags,corpus,k,V,nthread,minibatch,var_path,record
             nBatch_value += 1
             logging.info('Got batch {} results from worker {}'.format(nBatch_value,source))
             lockedEta.add_eta(delta_eta)
-            doc_seen = nBatch_value * minibatch * 1.0
-            if doc_seen - last_doc_seen >= 200000:
+            doc_seen = nBatch_value * thread_batch
+            if doc_seen - last_doc_seen >= 100000:
                 fn = 'eta.{}.pickle'.format(nBatch_value/nthread-1)
                 path = os.path.join(var_path,fn)
                 lockedEta.write_eta(path)
