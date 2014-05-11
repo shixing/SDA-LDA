@@ -2,6 +2,7 @@ data/*
 lda-c-dist/*
 var/*
 log/*
+jobs_test/*
 .DS_Store
 *~
 [#].[#]
